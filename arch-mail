@@ -15,17 +15,16 @@ genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt /bin/bash <<"EOT"
 yes | pacman -S networkmanager grub efibootmgr vim neofetch htop curl
 systemctl enable --now NetworkManager
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+grub-install /dev/sda
 grub-mkconfig -o /boot/grub/grub.cfg
 echo -e "licht\nlicht" | passwd
 sed -i '/en_US.UTF-8 UTF-8/s/^#//g' /etc/locale.gen
-#sed -i '/en_US.ISO-8859-1/s/^#//g' /etc/locale.gen
 locale-gen
 echo "LANG=en-US.UTF-8" > /etc/locale.conf
 echo "nair-i" > /etc/hostname
 ln -sf /usr/share/zoneinfo/posix/CET /etc/localtime
 echo "[[ -f ~/.profile ]] && . ~/.profile" > ~/.bash_profile
-
+echo "alias mailu='cd /opt/mailcow-dockerized && docker-compose up -d'" >> ~/.bashrc
 yes | pacman -S net-tools docker docker-compose git
 netstat -tulpn | grep -E -w '25|80|110|143|443|465|587|993|995|4190|5222|5269|5443'
 systemctl enable --now docker
@@ -35,7 +34,6 @@ git clone https://github.com/mailcow/mailcow-dockerized
 cd mailcow-dockerized
 ./generate_config.sh
 docker-compose pull
-
 exit
 EOT
 umount -R /mnt
