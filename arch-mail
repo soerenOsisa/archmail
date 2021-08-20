@@ -24,7 +24,6 @@ echo "LANG=en-US.UTF-8" > /etc/locale.conf
 echo "mail" > /etc/hostname
 ln -sf /usr/share/zoneinfo/Europe/Zurich /etc/localtime
 echo "[[ -f ~/.profile ]] && . ~/.profile" > ~/.bash_profile
-echo "alias mailu='cd /opt/mailcow-dockerized && docker-compose up -d'" >> ~/.bashrc
 yes | pacman -S net-tools docker docker-compose git
 netstat -tulpn | grep -E -w '25|80|110|143|443|465|587|993|995|4190|5222|5269|5443'
 systemctl enable --now docker
