@@ -25,11 +25,20 @@ echo "mail" > /etc/hostname
 ln -sf /usr/share/zoneinfo/Europe/Zurich /etc/localtime
 echo "[[ -f ~/.profile ]] && . ~/.profile" > ~/.bash_profile
 yes | pacman -S net-tools docker docker-compose git
-netstat -tulpn | grep -E -w '25|80|110|143|443|465|587|993|995|4190|5222|5269|5443'
 systemctl enable --now docker
-umask
-cd /opt
-git clone https://github.com/mailcow/mailcow-dockerized
+
+
+
+netstat -tulpn | grep -E -w '80|8080'
+cd /usr/local
+git clone https://github.com/searx/searx-docker.git
+cd searx-docker
+sed -i "s|ReplaceWithARealKey\!|$(openssl rand -base64 33)|g" .env
+timeout 30 ./start.sh
+cp searx-docker.service.template searx-docker.service
+systemctl enable $(pwd)/searx-docker.service
+systemctl start searx-docker.service
+
 exit
 EOT
 umount -R /mnt
