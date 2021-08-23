@@ -13,21 +13,62 @@ mount $drive"1" /mnt/boot
 pacstrap /mnt base base-devel linux linux-firmware
 genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt /bin/bash <<"EOT"
-yes | pacman -S networkmanager grub efibootmgr vim neofetch htop curl
+yes | pacman -Sy --noconfirm --noprogressbar reflector rsync curl
+reflector -a 12 -l 24 -f 12 --sort rate --save /etc/pacman.d/mirrorlist
+source /etc/pacman.d/mirrorlist
+pacman -Syyu
+yes | pacman -S --noconfirm --noprogressbar networkmanager grub efibootmgr vim neofetch htop openssh git ufw
 systemctl enable --now NetworkManager
 grub-install /dev/sda
+sed -i "s/TIMEOUT=5/TIMEOUT=0/g" /etc/default/grub
+sed -i "s/TIMEOUT_STYLE=menu/TIMEOUT_STYLE=hidden/g" /etc/default/grub
+sed -i "s/="loglevel=3 quiet"/="loglevel=0 quiet splash"/g" /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 echo -e "licht\nlicht" | passwd
+useradd -m -g wheel s
+sed -i '/ %wheel/s/^#//g' /etc/sudoers
+echo -e "licht\nlicht" | passwd s
 sed -i '/en_US.UTF-8 UTF-8/s/^#//g' /etc/locale.gen
 locale-gen
 echo "LANG=en-US.UTF-8" > /etc/locale.conf
 echo "mail" > /etc/hostname
 ln -sf /usr/share/zoneinfo/Europe/Zurich /etc/localtime
 echo "[[ -f ~/.profile ]] && . ~/.profile" > ~/.bash_profile
-yes | pacman -S net-tools docker docker-compose git
+
+yes | pacman -S --noconfirm --noprogressbar xorg lightdm lightdm-gtk-greeter xmonad xmonad-contrib xmobar dmenu picom nitrogen terminator yay terminator
+systemctl enable lightdm
+sed -i 's/#display-setup-script=/display-setup-script=xrandr --output Virtual-1 --mode 1920x1080/g' /etc/lightdm/lightdm.conf
+echo eof
+setxkbmap us &
+nitrogen --restore &
+picom -f & eof >> ~/.xprofile
+sed -i 's/vsync/#vsync/g' /etc/xdg/picom.conf
+mkdir ~/.xmonad
+echo eof
+import Xmonad
+main = xmonad def
+	{ terminal = "terminator"
+	, modMask = mod4Mask
+	} eof >> ~/.xmonad/xmonad.hs
+echo "licht" | su s
+yes | yay -S librewolf-bin
+exit
+
+exit
+EOT
+umount -R /mnt
+reboot
+
+yes | pacman -S net-tools docker docker-compose
 systemctl enable --now docker
-
-
+netstat -tulpn | grep -E -w '25|80|110|143|443|465|587|993|995|4190|5222|5269|5443'
+umask
+cd /opt
+git clone https://github.com/mailcow/mailcow-dockerized
+#./generate_config.sh
+#docker-compose pull
+#docker-compose up -d
+#docker-compose down -v
 
 netstat -tulpn | grep -E -w '80|8080'
 cd /usr/local
